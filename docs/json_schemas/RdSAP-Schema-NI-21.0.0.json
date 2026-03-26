@@ -1,0 +1,827 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "RdSAP-Schema-NI-21.0.0",
+  "title": "RdSAP-Schema-21.0.1 GET Certificate API Response",
+  "description": "JSON schema for the data returned by the GET /api/certificate endpoint for certificates lodged under RdSAP-Schema-21.0.1. Reflects the output of the export configuration (Rdsap21Base) and the fn_export_json_document PostgreSQL transform. Fields of type Measurement, Money or Sentence may appear as a scalar value or as an object with a qualifier key (quantity/currency/language) plus a value key, depending on whether the originating XML included the attribute.",
+  "type": "object",
+  "$defs": {
+    "measurement_value": {
+      "description": "A decimal measurement. Stored as a plain number when the source XML element carried no 'quantity' attribute; stored as an object when the attribute was present.",
+      "anyOf": [
+        { "type": "number" },
+        {
+          "type": "object",
+          "properties": {
+            "quantity": { "type": "string", "description": "Unit of measurement, e.g. 'metres', 'square metres', 'kWh/m2'" },
+            "value":    { "type": "number" }
+          },
+          "required": ["value"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "money_value": {
+      "description": "A monetary amount. Stored as a plain number when the source XML element carried no 'currency' attribute; stored as an object when the attribute was present.",
+      "anyOf": [
+        { "type": "number" },
+        {
+          "type": "object",
+          "properties": {
+            "currency": { "type": "string", "description": "ISO 4217 currency code, typically 'GBP'" },
+            "value":    { "type": "number" }
+          },
+          "required": ["value"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "sentence_value": {
+      "description": "A text value. Stored as a plain string when no 'language' attribute was present in the XML; stored as an object when the attribute was present.",
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "language": { "type": "string", "description": "Language code, e.g. '1' for English" },
+            "value":    { "type": "string" }
+          },
+          "required": ["value"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "flag_value": {
+      "description": "An XML Flag type: 'Y' or 'N'.",
+      "type": "string",
+      "enum": ["Y", "N"]
+    },
+    "boolean_string": {
+      "description": "An xs:boolean value serialised as a string: 'true' or 'false'.",
+      "type": "string",
+      "enum": ["true", "false"]
+    },
+    "property_summary_item": {
+      "type": "object",
+      "description": "Summary rating for a single property feature (wall, roof, heating system, etc.).",
+      "properties": {
+        "description":                   { "$ref": "#/$defs/sentence_value" },
+        "energy_efficiency_rating":      { "type": "integer", "minimum": 0, "maximum": 5 },
+        "environmental_efficiency_rating": { "type": "integer", "minimum": 0, "maximum": 5 }
+      },
+      "required": ["description", "energy_efficiency_rating", "environmental_efficiency_rating"]
+    },
+    "improvement_details": {
+      "description": "Either a coded improvement number or free-text improvement texts.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "improvement_number": { "type": "integer" }
+          },
+          "required": ["improvement_number"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "improvement_texts": {
+              "type": "object",
+              "properties": {
+                "improvement_summary":     { "type": "string" },
+                "improvement_description": { "type": "string" }
+              }
+            }
+          },
+          "required": ["improvement_texts"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "suggested_improvement": {
+      "type": "object",
+      "properties": {
+        "sequence":                   { "type": "integer" },
+        "improvement_category":       { "type": "integer" },
+        "improvement_type":           { "type": "string" },
+        "typical_saving":             { "$ref": "#/$defs/money_value" },
+        "energy_performance_rating":  { "type": "integer" },
+        "environmental_impact_rating":{ "type": "integer" },
+        "improvement_details":        { "$ref": "#/$defs/improvement_details" },
+        "indicative_cost": {
+          "anyOf": [
+            { "type": "string" },
+            { "type": "number" }
+          ]
+        }
+      },
+      "required": ["sequence", "improvement_category", "improvement_type", "typical_saving", "energy_performance_rating", "environmental_impact_rating", "improvement_details"]
+    },
+    "sap_floor_dimension": {
+      "type": "object",
+      "properties": {
+        "floor":              { "type": "integer", "description": "Storey floor code (0=ground, 1=first, etc.)" },
+        "floor_construction": { "type": "integer" },
+        "floor_insulation":   { "type": "integer" },
+        "heat_loss_perimeter":{ "$ref": "#/$defs/measurement_value" },
+        "total_floor_area":   { "$ref": "#/$defs/measurement_value" },
+        "room_height":        { "$ref": "#/$defs/measurement_value" },
+        "party_wall_length":  { "$ref": "#/$defs/measurement_value" }
+      },
+      "required": ["floor", "heat_loss_perimeter", "total_floor_area", "room_height", "party_wall_length"]
+    },
+    "sap_room_in_roof": {
+      "type": "object",
+      "properties": {
+        "floor_area":           { "$ref": "#/$defs/measurement_value" },
+        "construction_age_band":{ "type": "string" },
+        "insulation":           { "type": "string" },
+        "roof_room_connected":  { "$ref": "#/$defs/flag_value" }
+      },
+      "required": ["floor_area", "construction_age_band"]
+    },
+    "sap_alternative_wall": {
+      "type": "object",
+      "properties": {
+        "wall_construction":    { "type": "integer" },
+        "wall_insulation_type": { "type": "integer" },
+        "wall_area":            { "$ref": "#/$defs/measurement_value" },
+        "wall_thickness_measured": { "$ref": "#/$defs/flag_value" },
+        "wall_thickness":       { "type": "integer" },
+        "wall_u_value":         { "type": "number" },
+        "wall_insulation_thickness": { "type": "string" },
+        "wall_insulation_thickness_measured": { "type": "number" },
+        "wall_insulation_thermal_conductivity": { "type": "integer" },
+        "wall_dry_lined":       { "$ref": "#/$defs/flag_value" },
+        "sheltered_wall":       { "$ref": "#/$defs/flag_value" }
+      },
+      "required": ["wall_construction", "wall_insulation_type", "wall_thickness_measured", "wall_dry_lined"]
+    },
+    "sap_building_part": {
+      "type": "object",
+      "properties": {
+        "building_part_number":    { "type": "integer" },
+        "identifier":              { "type": "string" },
+        "construction_age_band":   { "type": "string" },
+        "sap_floor_dimensions":    {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sap_floor_dimension" },
+          "minItems": 1
+        },
+        "floor_u_value":           { "type": "number" },
+        "floor_insulation_thickness": { "type": "string" },
+        "floor_heat_loss":         { "type": "integer" },
+        "roof_construction":       { "type": "integer" },
+        "roof_insulation_location":{ "type": "integer" },
+        "roof_u_value":            { "type": "number" },
+        "roof_insulation_thickness":{ "type": "string" },
+        "rafter_insulation_thickness": { "type": "string" },
+        "flat_roof_insulation_thickness": { "type": "string" },
+        "sloping_ceiling_insulation_thickness": { "type": "string" },
+        "wall_construction":       { "type": "integer" },
+        "wall_insulation_type":    { "type": "integer" },
+        "wall_thickness_measured": { "$ref": "#/$defs/flag_value" },
+        "wall_thickness":          { "type": "integer" },
+        "wall_dry_lined":          { "$ref": "#/$defs/flag_value" },
+        "wall_u_value":            { "type": "number" },
+        "wall_insulation_thickness": { "type": "string" },
+        "wall_insulation_thickness_measured": { "type": "number" },
+        "wall_insulation_thermal_conductivity": { "type": "integer" },
+        "party_wall_construction": {
+          "anyOf": [{ "type": "integer" }, { "type": "string" }]
+        },
+        "sap_room_in_roof":        { "$ref": "#/$defs/sap_room_in_roof" },
+        "sap_alternative_wall_1":  { "$ref": "#/$defs/sap_alternative_wall" },
+        "sap_alternative_wall_2":  { "$ref": "#/$defs/sap_alternative_wall" }
+      },
+      "required": ["building_part_number", "construction_age_band", "sap_floor_dimensions", "floor_heat_loss", "roof_construction", "roof_insulation_location", "wall_construction", "wall_insulation_type", "wall_thickness_measured", "wall_dry_lined", "party_wall_construction"]
+    },
+    "storage_heater": {
+      "type": "object",
+      "properties": {
+        "storage_heater_index_number": { "type": "integer" },
+        "storage_heater_count":        { "type": "integer" },
+        "high_heat_retention":         { "$ref": "#/$defs/boolean_string" }
+      }
+    },
+    "main_heating_item": {
+      "type": "object",
+      "properties": {
+        "main_heating_number":        { "type": "integer", "minimum": 1, "maximum": 2 },
+        "main_heating_category":      { "type": "integer" },
+        "main_fuel_type":             { "type": "integer" },
+        "main_heating_control":       { "type": "integer" },
+        "main_heating_index_number":  { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
+        "main_heating_data_source":   { "type": "integer" },
+        "sap_main_heating_code":      { "type": "integer" },
+        "boiler_ignition_type":       { "type": "integer" },
+        "boiler_flue_type":           { "type": "integer" },
+        "fan_flue_present":           { "$ref": "#/$defs/flag_value" },
+        "heat_emitter_type":          { "type": "integer" },
+        "main_heating_fraction":      { "type": "number" },
+        "has_fghrs":                  { "$ref": "#/$defs/flag_value" },
+        "fghrs_index_number":         { "type": "integer" },
+        "emitter_temperature": {
+          "anyOf": [{ "type": "integer" }, { "type": "string" }]
+        },
+        "mcs_installed_heat_pump":    { "$ref": "#/$defs/boolean_string" },
+        "central_heating_pump_age":   { "type": "integer" },
+        "compensating_controller_index_number": { "type": "integer" },
+        "ttzc_index_number":          { "type": "integer" },
+        "community_heat_network_index_number": { "type": "integer" },
+        "community_heat_sub_network_name": { "type": "string" },
+        "community_heat_distribution_type": { "type": "integer" },
+        "community_heat_chp_electricity_generation": { "type": "integer" },
+        "storage_heaters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/storage_heater" }
+        }
+      },
+      "required": ["main_heating_number", "main_heating_category", "main_fuel_type", "main_heating_control", "main_heating_data_source", "heat_emitter_type", "main_heating_fraction", "has_fghrs"]
+    },
+    "photovoltaic_supply": {
+      "description": "Either 'none or no details' summary or a list of one to three PV arrays.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "none_or_no_details": {
+              "type": "object",
+              "properties": {
+                "percent_roof_area": { "type": "number" },
+                "pv_connection":     { "type": "integer" }
+              },
+              "required": ["percent_roof_area"]
+            }
+          },
+          "required": ["none_or_no_details"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "pv_arrays": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "peak_power":  { "$ref": "#/$defs/measurement_value" },
+                  "orientation": { "type": "integer" },
+                  "pitch":       { "type": "integer" },
+                  "overshading": { "type": "integer" }
+                },
+                "required": ["peak_power", "orientation", "pitch", "overshading"]
+              },
+              "minItems": 1,
+              "maxItems": 3
+            }
+          },
+          "required": ["pv_arrays"]
+        }
+      ]
+    },
+    "pv_battery": {
+      "type": "object",
+      "properties": {
+        "battery_capacity": { "type": "number" }
+      }
+    },
+    "sap_window_item": {
+      "type": "object",
+      "properties": {
+        "window_location":    { "type": "integer" },
+        "window_height":      { "type": "number" },
+        "window_width":       { "type": "number" },
+        "draught_proofed":    { "$ref": "#/$defs/boolean_string" },
+        "glazing_type":       { "type": "integer" },
+        "window_type":        { "type": "integer" },
+        "orientation":        { "type": "integer" },
+        "window_transmission_details": {
+          "type": "object",
+          "properties": {
+            "u_value":             { "type": "number" },
+            "solar_transmittance": { "type": "number" },
+            "data_source":         { "type": "integer" }
+          }
+        },
+        "pvc_frame":                    { "$ref": "#/$defs/boolean_string" },
+        "glazing_gap":                  { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
+        "frame_factor":                 { "type": "number" },
+        "window_wall_type":             { "type": "integer" },
+        "permanent_shutters_present":   { "$ref": "#/$defs/flag_value" },
+        "permanent_shutters_insulated": { "$ref": "#/$defs/flag_value" }
+      },
+      "required": ["window_location", "window_height", "window_width", "glazing_type", "window_type", "orientation"]
+    },
+    "air_change_rate_item": {
+      "type": "object",
+      "properties": {
+        "air_change_rate_month": { "type": "integer" },
+        "air_change_rate_value": { "type": "number" }
+      },
+      "required": ["air_change_rate_month", "air_change_rate_value"]
+    },
+    "sap_special_feature": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "energy_feature": {
+          "type": "object",
+          "properties": {
+            "energy_saved_or_generated": { "$ref": "#/$defs/measurement_value" },
+            "saved_or_generated_fuel":   { "type": "integer" },
+            "energy_used":               { "$ref": "#/$defs/measurement_value" },
+            "energy_used_fuel":          { "type": "integer" },
+            "air_change_rates": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/air_change_rate_item" },
+              "minItems": 12,
+              "maxItems": 12
+            }
+          }
+        },
+        "emissions_feature": {
+          "type": "object",
+          "properties": {
+            "emissions_saved":   { "$ref": "#/$defs/measurement_value" },
+            "emissions_created": { "$ref": "#/$defs/measurement_value" }
+          }
+        }
+      },
+      "required": ["description"]
+    }
+  },
+  "required": [
+    "assessment_type",
+    "schema_type",
+    "created_at",
+    "schema_version_original",
+    "sap_version",
+    "calculation_software_version",
+    "inspection_date",
+    "report_type",
+    "completion_date",
+    "registration_date",
+    "status",
+    "language_code",
+    "property_type",
+    "region_code",
+    "country_code",
+    "transaction_type",
+    "tenure",
+    "uprn_source",
+    "current_energy_efficiency_band",
+    "potential_energy_efficiency_band",
+    "address_line_1",
+    "post_town",
+    "postcode",
+    "walls",
+    "roofs",
+    "floors",
+    "window",
+    "main_heating",
+    "main_heating_controls",
+    "hot_water",
+    "lighting",
+    "secondary_heating",
+    "has_hot_water_cylinder",
+    "dwelling_type",
+    "total_floor_area",
+    "has_fixed_air_conditioning",
+    "energy_rating_current",
+    "energy_rating_potential",
+    "energy_rating_average",
+    "environmental_impact_current",
+    "environmental_impact_potential",
+    "energy_consumption_current",
+    "energy_consumption_potential",
+    "co2_emissions_current",
+    "co2_emissions_current_per_floor_area",
+    "co2_emissions_potential",
+    "lighting_cost_current",
+    "lighting_cost_potential",
+    "heating_cost_current",
+    "heating_cost_potential",
+    "hot_water_cost_current",
+    "hot_water_cost_potential",
+    "built_form",
+    "extensions_count",
+    "door_count",
+    "percent_draughtproofed",
+    "habitable_room_count",
+    "heated_room_count",
+    "measurement_type",
+    "mechanical_ventilation",
+    "open_fireplaces_count",
+    "solar_water_heating",
+    "conservatory_type",
+    "sap_building_parts",
+    "sap_heating",
+    "sap_energy_source"
+  ],
+  "properties": {
+    "assessment_type": {
+      "type": "string",
+      "description": "Type of assessment. Always 'RdSAP' for this schema family.",
+      "enum": ["RdSAP"]
+    },
+    "schema_type": {
+      "type": "string",
+      "description": "The XSD schema version under which this certificate was lodged.",
+      "enum": ["RdSAP-Schema-NI-21.0.0"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime when the record was created in the data warehouse."
+    },
+    "schema_version_original": {
+      "type": "string",
+      "description": "The schema version recorded inside the XML document itself at time of lodgement."
+    },
+    "sap_version": {
+      "type": "number",
+      "description": "Version of the SAP/RdSAP methodology used."
+    },
+    "calculation_software_version": {
+      "type": "string",
+      "description": "Version of the calculation software used to produce the assessment. The software name is redacted."
+    },
+    "inspection_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the property was inspected (YYYY-MM-DD)."
+    },
+    "report_type": {
+      "type": "integer",
+      "description": "Report type code. 2 = EPC."
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the report was completed (YYYY-MM-DD)."
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the report was registered on the national register (YYYY-MM-DD)."
+    },
+    "status": {
+      "type": "string",
+      "description": "Report status, e.g. 'entered', 'appealed', 'cancelled', 'not for issue'."
+    },
+    "language_code": {
+      "type": "integer",
+      "description": "Language code. 1 = English, 2 = Welsh."
+    },
+    "property_type": {
+      "type": "integer",
+      "description": "Property type code (0=house, 1=bungalow, 2=flat, 3=maisonette, 4=park home)."
+    },
+    "region_code": {
+      "type": "integer",
+      "description": "UK region code."
+    },
+    "country_code": {
+      "type": "string",
+      "description": "Country code: 'ENG', 'EAW', 'NI', 'SCT'."
+    },
+    "transaction_type": {
+      "type": "integer",
+      "description": "Transaction type code describing why the EPC was produced."
+    },
+    "tenure": {
+      "type": "integer",
+      "description": "Tenure type code (1=owner-occupied, 2=rented-social, 3=rented-private, etc.)."
+    },
+    "uprn": {
+      "anyOf": [
+        { "type": "integer", "description": "Unique Property Reference Number as a positive integer." },
+        { "type": "null" }
+      ],
+      "description": "UPRN derived from the assessment_address_id (Energy Assessor-supplied) or from address matching. Null when neither source provides a valid UPRN."
+    },
+    "uprn_source": {
+      "type": "string",
+      "description": "Indicates how the UPRN was resolved: 'Energy Assessor', 'Address Matched', or '' (empty string when unresolved).",
+      "enum": ["Energy Assessor", "Address Matched", ""]
+    },
+    "current_energy_efficiency_band": {
+      "type": "string",
+      "description": "Energy efficiency band for current rating, derived from energy_rating_current.",
+      "enum": ["A", "B", "C", "D", "E", "F", "G"]
+    },
+    "potential_energy_efficiency_band": {
+      "type": "string",
+      "description": "Energy efficiency band for potential rating, derived from energy_rating_potential.",
+      "enum": ["A", "B", "C", "D", "E", "F", "G"]
+    },
+    "related_certificate_number": {
+      "type": "string",
+      "description": "RRN of a related certificate (e.g. previous EPC). Present only when the source XML contained a Related-RRN element."
+    },
+    "address_line_1": { "type": "string" },
+    "address_line_2": { "type": "string" },
+    "address_line_3": { "type": "string" },
+    "post_town":       { "type": "string" },
+    "postcode": {
+      "type": "string",
+      "description": "UK postcode in standard format, e.g. 'SW1A 2AA'."
+    },
+    "walls": {
+      "type": "array",
+      "description": "One or more wall summary ratings.",
+      "items": { "$ref": "#/$defs/property_summary_item" },
+      "minItems": 1
+    },
+    "roofs": {
+      "type": "array",
+      "description": "One or more roof summary ratings.",
+      "items": { "$ref": "#/$defs/property_summary_item" },
+      "minItems": 1
+    },
+    "floors": {
+      "type": "array",
+      "description": "One or more floor summary ratings.",
+      "items": { "$ref": "#/$defs/property_summary_item" },
+      "minItems": 1
+    },
+    "window": {
+      "$ref": "#/$defs/property_summary_item",
+      "description": "Window summary rating."
+    },
+    "main_heating": {
+      "type": "array",
+      "description": "One or two main heating system summary ratings.",
+      "items": { "$ref": "#/$defs/property_summary_item" },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "main_heating_controls": {
+      "type": "array",
+      "description": "One or two main heating controls summary ratings.",
+      "items": { "$ref": "#/$defs/property_summary_item" },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "hot_water":        { "$ref": "#/$defs/property_summary_item" },
+    "lighting":         { "$ref": "#/$defs/property_summary_item" },
+    "secondary_heating":{ "$ref": "#/$defs/property_summary_item" },
+    "has_hot_water_cylinder":          { "$ref": "#/$defs/boolean_string" },
+    "has_heated_separate_conservatory":{ "$ref": "#/$defs/boolean_string" },
+    "dwelling_type": {
+      "$ref": "#/$defs/sentence_value",
+      "description": "Human-readable property type description, e.g. 'Mid-terrace house'."
+    },
+    "total_floor_area": {
+      "type": "integer",
+      "description": "Total floor area in square metres."
+    },
+    "has_fixed_air_conditioning": { "$ref": "#/$defs/boolean_string" },
+    "multiple_glazed_proportion": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage of windows that are multiply glazed. Mutually exclusive with multiple_glazed_proportion_nr."
+    },
+    "multiple_glazed_proportion_nr": {
+      "type": "string",
+      "const": "NR",
+      "description": "Present instead of multiple_glazed_proportion when the value is not recorded."
+    },
+    "energy_rating_current":   { "type": "integer", "minimum": 0 },
+    "energy_rating_potential":  { "type": "integer", "minimum": 0 },
+    "energy_rating_average":    { "type": "integer", "minimum": 0 },
+    "environmental_impact_current":  { "type": "integer", "minimum": 0 },
+    "environmental_impact_potential":{ "type": "integer", "minimum": 0 },
+    "energy_consumption_current": {
+      "$ref": "#/$defs/measurement_value",
+      "description": "Estimated annual energy consumption in kWh/m2. May carry a 'quantity' attribute in the XML."
+    },
+    "energy_consumption_potential": {
+      "$ref": "#/$defs/measurement_value",
+      "description": "Estimated potential annual energy consumption in kWh/m2."
+    },
+    "co2_emissions_current":             { "$ref": "#/$defs/measurement_value" },
+    "co2_emissions_current_per_floor_area":{ "$ref": "#/$defs/measurement_value" },
+    "co2_emissions_potential":           { "$ref": "#/$defs/measurement_value" },
+    "lighting_cost_current":   { "$ref": "#/$defs/money_value" },
+    "lighting_cost_potential": { "$ref": "#/$defs/money_value" },
+    "heating_cost_current":    { "$ref": "#/$defs/money_value" },
+    "heating_cost_potential":  { "$ref": "#/$defs/money_value" },
+    "hot_water_cost_current":  { "$ref": "#/$defs/money_value" },
+    "hot_water_cost_potential":{ "$ref": "#/$defs/money_value" },
+    "suggested_improvements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/suggested_improvement" }
+    },
+    "alternative_improvements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/suggested_improvement" }
+    },
+    "lzc_energy_sources": {
+      "type": "array",
+      "description": "Array of LZC (low and zero carbon) energy source codes.",
+      "items": { "type": "integer" }
+    },
+    "renewable_heat_incentive": {
+      "type": "object",
+      "description": "Renewable Heat Incentive figures.",
+      "properties": {
+        "space_heating_existing_dwelling": { "type": "integer" },
+        "water_heating":                   { "type": "integer" },
+        "impact_of_loft_insulation":       { "type": "integer" },
+        "impact_of_cavity_insulation":     { "type": "integer" },
+        "impact_of_solid_wall_insulation": { "type": "integer" }
+      }
+    },
+    "addendum": {
+      "type": "object",
+      "properties": {
+        "addendum_numbers": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "cavity_fill_recommended": { "$ref": "#/$defs/boolean_string" },
+        "stone_walls":  { "$ref": "#/$defs/boolean_string" },
+        "system_build": { "$ref": "#/$defs/boolean_string" },
+        "access_issues":   { "$ref": "#/$defs/boolean_string" },
+        "high_exposure":   { "$ref": "#/$defs/boolean_string" },
+        "narrow_cavities": { "$ref": "#/$defs/boolean_string" }
+      }
+    },
+    "built_form":       { "type": "integer", "description": "Built form code (1=detached, 2=semi-detached, 3=end-terrace, 4=mid-terrace, 5=enclosed end-terrace, 6=enclosed mid-terrace)." },
+    "extensions_count": { "type": "integer" },
+    "multiple_glazing_type": { "type": "integer" },
+    "pvc_window_frames":     { "$ref": "#/$defs/boolean_string" },
+    "glazing_gap": {
+      "anyOf": [{ "type": "integer" }, { "type": "string" }],
+      "description": "Glazing gap code or value string."
+    },
+    "glazed_area": { "type": "integer" },
+    "door_count":  { "type": "integer" },
+    "insulated_door_count":     { "type": "integer" },
+    "draughtproofed_door_count":{ "type": "integer" },
+    "insulated_door_u_value":   { "type": "number" },
+    "percent_draughtproofed": {
+      "type": "integer",
+      "minimum": -2,
+      "maximum": 100,
+      "description": "Percentage of windows and doors with adequate draught proofing. -2 = not applicable."
+    },
+    "habitable_room_count": { "type": "integer" },
+    "heated_room_count":    { "type": "integer" },
+    "fixed_lighting_outlets_count":           { "type": "integer" },
+    "low_energy_fixed_lighting_outlets_count":{ "type": "integer" },
+    "low_energy_lighting": { "type": "integer", "description": "Percentage of fixed lighting outlets that are low-energy." },
+    "cfl_fixed_lighting_bulbs_count":         { "type": "integer", "description": "Count of CFL bulbs (v21+ only)." },
+    "led_fixed_lighting_bulbs_count":         { "type": "integer", "description": "Count of LED bulbs (v21+ only)." },
+    "incandescent_fixed_lighting_bulbs_count":{ "type": "integer", "description": "Count of incandescent bulbs (v21+ only)." },
+    "low_energy_fixed_lighting_bulbs_count":  { "type": "integer", "description": "Count of low-energy fixed bulbs (v21+ only)." },
+    "measurement_type":  { "type": "integer" },
+    "mechanical_ventilation": { "type": "integer" },
+    "mechanical_ventilation_index_number": { "type": "integer" },
+    "mechanical_vent_duct_type":           { "type": "integer" },
+    "mechanical_vent_duct_placement":      { "type": "integer" },
+    "mechanical_vent_duct_insulation":     { "type": "integer" },
+    "mechanical_vent_duct_insulation_level":{ "type": "integer" },
+    "mechanical_vent_measured_installation":{ "$ref": "#/$defs/boolean_string" },
+    "open_fireplaces_count": { "type": "integer" },
+    "solar_water_heating":   { "$ref": "#/$defs/flag_value" },
+    "conservatory_type":     { "type": "integer" },
+    "wet_rooms_count":             { "type": "integer", "description": "v21+ only." },
+    "pressure_test":               { "type": "integer", "description": "Air pressure test code (v21+ only)." },
+    "pressure_test_certificate_number": {
+      "anyOf": [{ "type": "integer" }, { "type": "string" }],
+      "description": "v21+ only."
+    },
+    "windows_transmission_details": {
+      "type": "object",
+      "properties": {
+        "u_value":             { "type": "number" },
+        "solar_transmittance": { "type": "number" },
+        "data_source":         { "type": "integer" }
+      }
+    },
+    "sap_flat_details": {
+      "type": "object",
+      "description": "Flat-specific details. Present only when property is a flat or maisonette.",
+      "properties": {
+        "flat_location":         { "type": "integer" },
+        "storey_count":          { "type": "integer" },
+        "level":                 { "type": "integer" },
+        "top_storey":            { "$ref": "#/$defs/flag_value" },
+        "heat_loss_corridor":    { "type": "integer" },
+        "unheated_corridor_length": { "$ref": "#/$defs/measurement_value" }
+      },
+      "required": ["flat_location", "level", "top_storey", "heat_loss_corridor"]
+    },
+    "sap_building_parts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sap_building_part" },
+      "minItems": 1,
+      "description": "One or more building parts comprising the dwelling."
+    },
+    "sap_heating": {
+      "type": "object",
+      "description": "Heating system details.",
+      "properties": {
+        "main_heating_details": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/main_heating_item" },
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "secondary_heating_type":  { "type": "integer" },
+        "secondary_fuel_type":     { "type": "integer" },
+        "water_heating_code":      { "type": "integer" },
+        "water_heating_fuel":      { "type": "integer" },
+        "immersion_heating_type": {
+          "anyOf": [{ "type": "integer" }, { "type": "string" }]
+        },
+        "cylinder_size":              { "type": "integer" },
+        "cylinder_size_measured":     { "$ref": "#/$defs/measurement_value" },
+        "cylinder_insulation_type":   { "type": "integer" },
+        "cylinder_insulation_thickness": { "type": "integer" },
+        "cylinder_thermostat":        { "$ref": "#/$defs/flag_value" },
+        "cylinder_heat_loss":         { "$ref": "#/$defs/measurement_value" },
+        "has_fixed_air_conditioning": { "$ref": "#/$defs/boolean_string" },
+        "instantaneous_wwhrs": {
+          "type": "object",
+          "properties": {
+            "rooms_with_bath_and_or_shower":   { "type": "integer" },
+            "rooms_with_mixer_shower_no_bath": { "type": "integer" },
+            "rooms_with_bath_and_mixer_shower":{ "type": "integer" },
+            "wwhrs_index_number1": { "type": "integer" },
+            "wwhrs_index_number2": { "type": "integer" }
+          }
+        },
+        "storage_wwhrs": {
+          "type": "object",
+          "properties": {
+            "storage_wwhrs_energy_efficiency_class": { "type": "integer" },
+            "storage_wwhrs_volume":                  { "type": "number" }
+          }
+        },
+        "shower_outlets": {
+          "type": "object"
+        },
+        "number_baths":       { "type": "integer" },
+        "number_baths_wwhrs": { "type": "integer" },
+        "community_dhw_network_index_number":  { "type": "integer" },
+        "community_dhw_sub_network_name":       { "type": "string" },
+        "community_dhw_distribution_type":      { "type": "integer" },
+        "community_dhw_chp_electricity_generation": { "type": "integer" }
+      },
+      "required": ["main_heating_details", "water_heating_code", "water_heating_fuel", "immersion_heating_type", "cylinder_size", "has_fixed_air_conditioning"]
+    },
+    "sap_energy_source": {
+      "type": "object",
+      "description": "Energy supply and generation details.",
+      "properties": {
+        "meter_type":              { "type": "integer" },
+        "mains_gas":               { "$ref": "#/$defs/flag_value" },
+        "electricity_smart_meter_present":  { "$ref": "#/$defs/boolean_string", "description": "v21+ only." },
+        "gas_smart_meter_present":          { "$ref": "#/$defs/boolean_string", "description": "v21+ only." },
+        "is_dwelling_export_capable":       { "$ref": "#/$defs/boolean_string", "description": "v21+ only." },
+        "wind_turbines_count":     { "type": "integer" },
+        "wind_turbines_terrain_type": { "type": "integer" },
+        "wind_turbine_details": {
+          "type": "object",
+          "properties": {
+            "rotor_diameter": { "$ref": "#/$defs/measurement_value" },
+            "hub_height":     { "$ref": "#/$defs/measurement_value" }
+          }
+        },
+        "photovoltaic_supply": { "$ref": "#/$defs/photovoltaic_supply" },
+        "pv_connection": { "type": "integer", "description": "v21+ only." },
+        "pv_diverter":   { "$ref": "#/$defs/boolean_string", "description": "v21+ only." },
+        "pv_battery_count": { "type": "integer", "description": "v21+ only." },
+        "pv_batteries": {
+          "type": "object",
+          "description": "v21+ only.",
+          "properties": {
+            "pv_battery": { "$ref": "#/$defs/pv_battery" }
+          }
+        },
+        "hydro_electric_generation": { "type": "number" },
+        "is_hydro_output_connected_to_dwelling_meter": { "$ref": "#/$defs/boolean_string" }
+      },
+      "required": ["meter_type", "mains_gas", "wind_turbines_count", "wind_turbines_terrain_type", "photovoltaic_supply"]
+    },
+    "sap_windows": {
+      "type": "array",
+      "description": "Detailed window measurements (present when all windows were individually measured).",
+      "items": { "$ref": "#/$defs/sap_window_item" }
+    },
+    "sap_deselected_improvements": {
+      "type": "array",
+      "description": "Improvement measures deselected by the energy assessor.",
+      "items": { "type": "string" }
+    },
+    "sap_special_features": {
+      "type": "array",
+      "description": "Special features providing additional energy savings or emissions reductions (Appendix Q). Only applicable from RdSAP-Schema-19.0 onwards.",
+      "items": { "$ref": "#/$defs/sap_special_feature" }
+    }
+  }
+}
+

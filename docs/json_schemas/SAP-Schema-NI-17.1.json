@@ -1,0 +1,1648 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "SAP-Schema-NI-17.1",
+  "title": "SAP-Schema-16.3 GET Certificate API Response",
+  "description": "JSON schema for the data returned by the GET /api/certificate endpoint for certificates lodged under SAP-Schema-19.0.0 (and 19.1.0, 19.2.0). Reflects the output of the Sap1900Base export configuration and the fn_export_json_document PostgreSQL transform. Fields of type Measurement or Money may appear as a scalar value or as an object with a qualifier key (quantity/currency) plus a value key, depending on whether the originating XML included the attribute. SAP-Schema-19.x adds SAP10 fields: sap_lighting, wind_turbines array, shower_outlets, smart meter flags, and terrain/export-capability fields compared to SAP-Schema-18.0.0.",
+  "type": "object",
+  "$defs": {
+    "measurement_value": {
+      "description": "A Measurement-typed XML node. Appears as a plain number when the XML quantity attribute is absent, or as {quantity, value} when present.",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "quantity": {
+              "type": "string",
+              "description": "The XML quantity attribute value, e.g. 'kWh/m2' or 'm2'."
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "quantity",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "money_value": {
+      "description": "A Money-typed XML node. Appears as a plain number when the XML currency attribute is absent, or as {currency, value} when present.",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "currency": {
+              "type": "string",
+              "description": "The XML currency attribute value, e.g. 'GBP'."
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "currency",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "boolean_string": {
+      "description": "A boolean value encoded as a string 'true' or 'false'.",
+      "type": "string",
+      "enum": [
+        "true",
+        "false"
+      ]
+    },
+    "flag_value": {
+      "description": "A flag field encoded as 'Y' or 'N'.",
+      "type": "string",
+      "enum": [
+        "Y",
+        "N"
+      ]
+    },
+    "property_summary_item": {
+      "description": "A single element of a property summary section (walls, roofs, windows, etc.).",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "energy_efficiency_rating": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "environmental_efficiency_rating": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "description",
+        "energy_efficiency_rating",
+        "environmental_efficiency_rating"
+      ]
+    },
+    "improvement_details": {
+      "type": "object",
+      "properties": {
+        "improvement_number": {
+          "type": "integer",
+          "description": "Standard improvement measure number from the measure catalogue."
+        },
+        "improvement_texts": {
+          "type": "object",
+          "properties": {
+            "improvement_summary": {
+              "type": "string"
+            },
+            "improvement_description": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "suggested_improvement": {
+      "type": "object",
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "description": "Order in which improvements are presented."
+        },
+        "improvement_category": {
+          "type": "integer"
+        },
+        "improvement_type": {
+          "type": "string"
+        },
+        "improvement_details": {
+          "$ref": "#/$defs/improvement_details"
+        },
+        "indicative_cost": {
+          "type": "string"
+        },
+        "typical_saving": {
+          "$ref": "#/$defs/money_value",
+          "description": "Estimated annual saving. money_value (currency + value) in v17+ schemas; plain number in v16/15 schemas where XML lacked currency attribute."
+        },
+        "energy_performance_rating": {
+          "type": "integer"
+        },
+        "environmental_impact_rating": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sequence",
+        "improvement_category",
+        "improvement_type"
+      ]
+    },
+    "sap_floor_dimension": {
+      "description": "A single floor storey within a SAP building part.",
+      "type": "object",
+      "properties": {
+        "storey": {
+          "type": "integer",
+          "description": "Storey number (0 = ground floor)."
+        },
+        "floor": {
+          "type": "integer",
+          "description": "Floor index — used in some older schema versions instead of storey."
+        },
+        "description": {
+          "type": "string"
+        },
+        "floor_type": {
+          "type": "integer",
+          "description": "Floor construction type code."
+        },
+        "floor_construction": {
+          "type": "integer",
+          "description": "Floor construction code (used in older v16/15 schemas)."
+        },
+        "floor_insulation": {
+          "type": "integer"
+        },
+        "heat_loss_perimeter": {
+          "type": "number"
+        },
+        "total_floor_area": {
+          "type": "number"
+        },
+        "storey_height": {
+          "type": "number"
+        },
+        "room_height": {
+          "type": "number",
+          "description": "Room height — used in some older schema versions."
+        },
+        "heat_loss_area": {
+          "type": "number"
+        },
+        "u_value": {
+          "type": "number"
+        },
+        "kappa_value": {
+          "type": "number"
+        },
+        "kappa_value_from_below": {
+          "type": "number"
+        }
+      }
+    },
+    "sap_opening": {
+      "description": "A single opening (window or door) within a SAP building part.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "description": "Opening identifier — string name in v19, integer in some older versions."
+        },
+        "type": {
+          "type": "string",
+          "description": "References a name in sap_opening_types."
+        },
+        "location": {
+          "type": "string",
+          "description": "Wall or element name where the opening is located."
+        },
+        "orientation": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "orientation",
+        "width",
+        "height"
+      ]
+    },
+    "sap_opening_type": {
+      "description": "Definition of an opening type referenced by sap_openings.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name identifying this opening type."
+        },
+        "data_source": {
+          "type": "integer"
+        },
+        "type": {
+          "type": "integer",
+          "description": "Opening type code (1=door, 4=window, etc.)."
+        },
+        "glazing_type": {
+          "type": "integer"
+        },
+        "u_value": {
+          "type": "number"
+        },
+        "solar_transmittance": {
+          "type": "number"
+        },
+        "frame_factor": {
+          "type": "number"
+        },
+        "glazing_gap": {
+          "type": "integer"
+        },
+        "isargonfilled": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "frame_type": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "data_source",
+        "type",
+        "glazing_type",
+        "u_value"
+      ]
+    },
+    "sap_roof_item": {
+      "description": "A single roof element within a SAP building part.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "roof_type": {
+          "type": "integer"
+        },
+        "total_roof_area": {
+          "type": "number"
+        },
+        "u_value": {
+          "type": "number"
+        },
+        "kappa_value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "roof_type",
+        "total_roof_area",
+        "u_value"
+      ]
+    },
+    "sap_wall_item": {
+      "description": "A single wall element within a SAP building part.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "wall_type": {
+          "type": "integer"
+        },
+        "total_wall_area": {
+          "type": "number"
+        },
+        "u_value": {
+          "type": "number"
+        },
+        "kappa_value": {
+          "type": "number"
+        },
+        "is_curtain_walling": {
+          "$ref": "#/$defs/boolean_string"
+        }
+      },
+      "required": [
+        "name",
+        "wall_type",
+        "total_wall_area",
+        "u_value"
+      ]
+    },
+    "thermal_bridge_item": {
+      "description": "A single thermal bridge element.",
+      "type": "object",
+      "properties": {
+        "thermal_bridge_type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Bridge type code as string, e.g. 'E2' (v17+ schemas)."
+            },
+            {
+              "type": "integer",
+              "description": "Bridge type code as integer (v15/16 schemas)."
+            }
+          ]
+        },
+        "length": {
+          "type": "number"
+        },
+        "psi_value": {
+          "type": "number"
+        },
+        "psi_value_source": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "thermal_bridge_type",
+        "length",
+        "psi_value",
+        "psi_value_source"
+      ]
+    },
+    "sap_thermal_bridges_obj": {
+      "description": "Thermal bridge data for a building part.",
+      "type": "object",
+      "properties": {
+        "thermal_bridge_code": {
+          "type": "integer",
+          "description": "Overall thermal bridge code for the building part."
+        },
+        "thermal_bridges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/thermal_bridge_item"
+          }
+        }
+      },
+      "required": [
+        "thermal_bridge_code"
+      ]
+    },
+    "sap_building_part": {
+      "description": "A single building part (main dwelling or extension) in a SAP assessment.",
+      "type": "object",
+      "properties": {
+        "building_part_number": {
+          "type": "integer"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "construction_age_band": {
+          "type": "string",
+          "description": "Age band code for the construction (A–Q). Present in full SAP XML."
+        },
+        "construction_year": {
+          "type": "integer"
+        },
+        "overshading": {
+          "type": "integer"
+        },
+        "thermal_mass_parameter": {
+          "type": "number"
+        },
+        "sap_floor_dimensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sap_floor_dimension"
+          },
+          "minItems": 1
+        },
+        "sap_openings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sap_opening"
+          }
+        },
+        "sap_roofs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sap_roof_item"
+          }
+        },
+        "sap_walls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sap_wall_item"
+          }
+        },
+        "sap_thermal_bridges": {
+          "$ref": "#/$defs/sap_thermal_bridges_obj"
+        },
+        "wall_construction": {
+          "type": "integer",
+          "description": "Wall construction type (RdSAP-style field present when older SAP schemas process RdSAP XML)."
+        },
+        "wall_insulation_type": {
+          "type": "integer"
+        },
+        "wall_insulation_thickness": {
+          "type": "string"
+        },
+        "wall_thickness": {
+          "type": "integer"
+        },
+        "wall_thickness_measured": {
+          "type": "string"
+        },
+        "wall_dry_lined": {
+          "type": "string"
+        },
+        "roof_construction": {
+          "type": "integer"
+        },
+        "roof_insulation_location": {
+          "type": "integer"
+        },
+        "roof_insulation_thickness": {
+          "type": "string"
+        },
+        "floor_heat_loss": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "building_part_number"
+      ]
+    },
+    "main_heating_item": {
+      "description": "A single main heating system in the SAP assessment.",
+      "type": "object",
+      "properties": {
+        "main_heating_number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "main_heating_category": {
+          "type": "integer"
+        },
+        "main_heating_fraction": {
+          "type": "number"
+        },
+        "main_heating_data_source": {
+          "type": "integer"
+        },
+        "main_heating_code": {
+          "type": "integer"
+        },
+        "main_fuel_type": {
+          "type": "integer"
+        },
+        "main_heating_control": {
+          "type": "integer",
+          "description": "Heating control code."
+        },
+        "heat_emitter_type": {
+          "type": "integer"
+        },
+        "boiler_index_number": {
+          "type": "integer"
+        },
+        "main_heating_flue_type": {
+          "type": "integer"
+        },
+        "is_flue_fan_present": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_condensing_boiler": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "combi_boiler_type": {
+          "type": "integer"
+        },
+        "is_central_heating_pump_in_heated_space": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_oil_pump_in_heated_space": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_interlocked_system": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "has_separate_delayed_start": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_main_heating_hetas_approved": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "has_fghrs": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "central_heating_pump_age": {
+          "type": "integer"
+        },
+        "electric_cpsu_operating_temperature": {
+          "type": "integer"
+        },
+        "emitter_temperature": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "Emitter temperature code or 'NA' string."
+        },
+        "burner_control": {
+          "type": "integer"
+        },
+        "load_or_weather_compensation": {
+          "type": "integer"
+        },
+        "has_delayed_start_thermostat": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "storage_heaters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "storage_heater_index_number": {
+                "type": "integer"
+              },
+              "storage_heater_count": {
+                "type": "integer"
+              },
+              "high_heat_retention": {
+                "$ref": "#/$defs/boolean_string"
+              }
+            }
+          }
+        },
+        "sap_main_heating_code": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "main_heating_number",
+        "main_heating_category",
+        "main_heating_fraction",
+        "main_heating_data_source"
+      ]
+    },
+    "community_heating_system": {
+      "description": "A community heating system serving the dwelling.",
+      "type": "object",
+      "properties": {
+        "community_heating_use": {
+          "type": "integer"
+        },
+        "community_heating_distribution_type": {
+          "type": "integer"
+        },
+        "community_heating_distribution_loss_factor": {
+          "type": "number"
+        },
+        "heat_network_index_number": {
+          "type": "integer"
+        },
+        "heat_network_existing": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "heat_network_assessed_as_new": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "sub_network_name": {
+          "type": "string"
+        }
+      }
+    },
+    "sap_special_feature": {
+      "description": "A SAP special feature (non-standard technology or feature).",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "energy_feature": {
+          "type": "object",
+          "properties": {
+            "energy_saved_or_generated": {
+              "$ref": "#/$defs/measurement_value"
+            },
+            "saved_or_generated_fuel": {
+              "type": "integer"
+            },
+            "energy_used": {
+              "$ref": "#/$defs/measurement_value"
+            },
+            "energy_used_fuel": {
+              "type": "integer"
+            },
+            "air_change_rates": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "air_change_rate_month": {
+                    "type": "integer"
+                  },
+                  "air_change_rate_value": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "emissions_feature": {
+          "type": "object",
+          "properties": {
+            "emissions_saved": {
+              "$ref": "#/$defs/measurement_value"
+            },
+            "emissions_created": {
+              "$ref": "#/$defs/measurement_value"
+            }
+          }
+        }
+      },
+      "required": [
+        "description"
+      ]
+    },
+    "pv_array": {
+      "description": "A photovoltaic array.",
+      "type": "object",
+      "properties": {
+        "peak_power": {
+          "type": "number",
+          "description": "Peak power in kWp."
+        },
+        "orientation": {
+          "type": "integer"
+        },
+        "pitch": {
+          "type": "integer"
+        },
+        "overshading": {
+          "type": "integer"
+        },
+        "pv_connection": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "peak_power",
+        "orientation",
+        "pitch",
+        "overshading"
+      ]
+    }
+  },
+  "required": [
+    "assessment_type",
+    "schema_type",
+    "created_at",
+    "schema_version_original",
+    "sap_version",
+    "sap_data_version",
+    "calculation_software_version",
+    "inspection_date",
+    "report_type",
+    "completion_date",
+    "registration_date",
+    "status",
+    "language_code",
+    "transaction_type",
+    "property_type",
+    "address_line_1",
+    "post_town",
+    "postcode",
+    "uprn_source",
+    "current_energy_efficiency_band",
+    "potential_energy_efficiency_band",
+    "region_code",
+    "country_code",
+    "walls",
+    "roofs",
+    "floors",
+    "windows",
+    "main_heating",
+    "main_heating_controls",
+    "secondary_heating",
+    "hot_water",
+    "lighting",
+    "air_tightness",
+    "has_fixed_air_conditioning",
+    "has_hot_water_cylinder",
+    "dwelling_type",
+    "total_floor_area",
+    "energy_rating_current",
+    "energy_rating_potential",
+    "energy_rating_average",
+    "environmental_impact_current",
+    "environmental_impact_potential",
+    "energy_consumption_current",
+    "energy_consumption_potential",
+    "co2_emissions_current",
+    "co2_emissions_potential",
+    "co2_emissions_current_per_floor_area",
+    "lighting_cost_current",
+    "lighting_cost_potential",
+    "heating_cost_current",
+    "heating_cost_potential",
+    "hot_water_cost_current",
+    "hot_water_cost_potential",
+    "built_form",
+    "living_area",
+    "orientation",
+    "sap_building_parts",
+    "sap_heating",
+    "sap_energy_source",
+    "sap_ventilation",
+    "sap_opening_types"
+  ],
+  "properties": {
+    "assessment_type": {
+      "type": "string",
+      "description": "Type of assessment. Always 'SAP' for this schema family.",
+      "enum": [
+        "SAP"
+      ]
+    },
+    "schema_type": {
+      "type": "string",
+      "description": "The XSD schema version under which this certificate was lodged.",
+      "enum": [
+        "SAP-Schema-NI-17.1"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime when the record was created in the data warehouse."
+    },
+    "schema_version_original": {
+      "type": "string",
+      "description": "The schema version recorded inside the XML document itself at time of lodgement."
+    },
+    "sap_version": {
+      "type": "number",
+      "description": "Version of the SAP methodology used."
+    },
+    "sap_data_version": {
+      "type": "number",
+      "description": "Version of the SAP data tables/datasets used (e.g. 10.2 for SAP10)."
+    },
+    "calculation_software_version": {
+      "type": "string",
+      "description": "Version of the calculation software. The software name is redacted by fn_export_json_document."
+    },
+    "inspection_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the property was inspected (YYYY-MM-DD)."
+    },
+    "report_type": {
+      "type": "integer",
+      "description": "Report type code. 3 = full SAP."
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the report was completed (YYYY-MM-DD)."
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the report was registered (YYYY-MM-DD)."
+    },
+    "status": {
+      "type": "string",
+      "description": "Report status, e.g. 'entered', 'appealed', 'cancelled'."
+    },
+    "language_code": {
+      "type": "integer",
+      "description": "Language code. 1 = English, 2 = Welsh."
+    },
+    "tenure": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Tenure type. Integer code in modern schemas; 'ND' (not defined) string in some older versions."
+    },
+    "transaction_type": {
+      "type": "integer",
+      "description": "Transaction type code."
+    },
+    "seller_commission_report": {
+      "type": "string",
+      "description": "Whether the report was commissioned for sale, 'Y' or 'N'."
+    },
+    "property_type": {
+      "type": "integer",
+      "description": "Property type code (0=house, 1=bungalow, 2=flat, 3=maisonette, 4=park home)."
+    },
+    "address_line_1": {
+      "type": "string"
+    },
+    "address_line_2": {
+      "type": "string"
+    },
+    "address_line_3": {
+      "type": "string"
+    },
+    "post_town": {
+      "type": "string"
+    },
+    "postcode": {
+      "type": "string",
+      "description": "UK postcode in standard format."
+    },
+    "uprn": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "description": "Unique Property Reference Number as a positive integer."
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "UPRN derived from assessment_address_id or address matching. Null when unresolved."
+    },
+    "uprn_source": {
+      "type": "string",
+      "description": "How the UPRN was resolved: 'Energy Assessor', 'Address Matched', or '' (empty).",
+      "enum": [
+        "Energy Assessor",
+        "Address Matched",
+        ""
+      ]
+    },
+    "current_energy_efficiency_band": {
+      "type": "string",
+      "description": "Energy efficiency band for current rating.",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ]
+    },
+    "potential_energy_efficiency_band": {
+      "type": "string",
+      "description": "Energy efficiency band for potential rating.",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ]
+    },
+    "related_certificate_number": {
+      "type": "string",
+      "description": "RRN of a related certificate. Present only when the source XML contained a Related-RRN element."
+    },
+    "region_code": {
+      "type": "integer",
+      "description": "UK region code."
+    },
+    "country_code": {
+      "type": "string",
+      "description": "Country code: 'ENG', 'EAW', 'NI', 'SCT'."
+    },
+    "assessment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the most recent assessment (YYYY-MM-DD)."
+    },
+    "data_type": {
+      "type": "integer",
+      "description": "Data type code (1 = new dwelling SAP10, 2 = existing dwelling SAP2012)."
+    },
+    "walls": {
+      "type": "array",
+      "description": "One or more wall summary ratings.",
+      "items": {
+        "$ref": "#/$defs/property_summary_item"
+      },
+      "minItems": 1
+    },
+    "roofs": {
+      "type": "array",
+      "description": "One or more roof summary ratings.",
+      "items": {
+        "$ref": "#/$defs/property_summary_item"
+      },
+      "minItems": 1
+    },
+    "floors": {
+      "type": "array",
+      "description": "One or more floor summary ratings.",
+      "items": {
+        "$ref": "#/$defs/property_summary_item"
+      },
+      "minItems": 1
+    },
+    "main_heating": {
+      "type": "array",
+      "description": "One or two main heating system summary ratings.",
+      "items": {
+        "$ref": "#/$defs/property_summary_item"
+      },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "main_heating_controls": {
+      "type": "array",
+      "description": "One or two main heating controls summary ratings.",
+      "items": {
+        "$ref": "#/$defs/property_summary_item"
+      },
+      "minItems": 1,
+      "maxItems": 2
+    },
+    "secondary_heating": {
+      "$ref": "#/$defs/property_summary_item",
+      "description": "Secondary heating summary rating."
+    },
+    "hot_water": {
+      "$ref": "#/$defs/property_summary_item",
+      "description": "Hot water summary rating."
+    },
+    "lighting": {
+      "$ref": "#/$defs/property_summary_item",
+      "description": "Lighting summary rating."
+    },
+    "air_tightness": {
+      "$ref": "#/$defs/property_summary_item",
+      "description": "Air tightness summary rating (SAP-only, not present in RdSAP)."
+    },
+    "has_fixed_air_conditioning": {
+      "$ref": "#/$defs/boolean_string"
+    },
+    "has_hot_water_cylinder": {
+      "$ref": "#/$defs/boolean_string"
+    },
+    "has_heated_separate_conservatory": {
+      "$ref": "#/$defs/boolean_string"
+    },
+    "dwelling_type": {
+      "type": "string",
+      "description": "Human-readable property type description, e.g. 'Mid-terrace house'."
+    },
+    "total_floor_area": {
+      "type": "integer",
+      "description": "Total floor area in square metres."
+    },
+    "multiple_glazed_percentage": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage of openings that are multiply glazed. SAP uses 'percentage' in the key name (vs 'proportion' in RdSAP)."
+    },
+    "energy_rating_current": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "energy_rating_potential": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "energy_rating_average": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "environmental_impact_current": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "environmental_impact_potential": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "co2_emissions_current": {
+      "$ref": "#/$defs/measurement_value"
+    },
+    "co2_emissions_current_per_floor_area": {
+      "$ref": "#/$defs/measurement_value"
+    },
+    "co2_emissions_potential": {
+      "$ref": "#/$defs/measurement_value"
+    },
+    "built_form": {
+      "type": "integer",
+      "description": "Built form code (1=detached, 2=semi-detached, 3=end-terrace, 4=mid-terrace, 5=enclosed end-terrace, 6=enclosed mid-terrace)."
+    },
+    "living_area": {
+      "type": "number",
+      "description": "Area of the living room/ground floor heated space in m2."
+    },
+    "orientation": {
+      "type": "integer",
+      "description": "Orientation code for the main facade."
+    },
+    "windows_overshading": {
+      "type": "integer",
+      "description": "Overshading code for windows."
+    },
+    "is_in_smoke_control_area": {
+      "type": "string",
+      "description": "Whether the property is in a smoke control area: 'true', 'false', or 'unknown'."
+    },
+    "conservatory_type": {
+      "type": "integer"
+    },
+    "design_water_use": {
+      "type": "integer",
+      "description": "Designed water use per person per day code (typically present in SAP-Schema-18.x)."
+    },
+    "lzc_energy_sources": {
+      "type": "array",
+      "description": "Array of LZC (low and zero carbon) energy source codes.",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "renewable_heat_incentive": {
+      "type": "object",
+      "description": "Renewable Heat Incentive figures.",
+      "properties": {
+        "rhi_new_dwelling": {
+          "type": "object",
+          "properties": {
+            "space_heating": {
+              "type": "integer"
+            },
+            "water_heating": {
+              "type": "integer"
+            }
+          }
+        },
+        "space_heating_existing_dwelling": {
+          "type": "integer"
+        },
+        "water_heating": {
+          "type": "integer"
+        }
+      }
+    },
+    "addendum": {
+      "type": "object",
+      "properties": {
+        "addendum_numbers": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "cavity_fill_recommended": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "stone_walls": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "system_build": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "access_issues": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "high_exposure": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "narrow_cavities": {
+          "$ref": "#/$defs/boolean_string"
+        }
+      }
+    },
+    "suggested_improvements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/suggested_improvement"
+      }
+    },
+    "alternative_improvements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/suggested_improvement"
+      }
+    },
+    "sap_flat_details": {
+      "type": "object",
+      "description": "Flat/maisonette specific details.",
+      "properties": {
+        "level": {
+          "type": "integer",
+          "description": "Floor level of the flat (0=ground)."
+        },
+        "storeys": {
+          "type": "integer",
+          "description": "Number of storeys in the flat (SAP-Schema-19.x)."
+        },
+        "flat_location": {
+          "type": "integer"
+        },
+        "storey_count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "level"
+      ]
+    },
+    "sap_building_parts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sap_building_part"
+      },
+      "minItems": 1,
+      "description": "One or more building parts comprising the dwelling."
+    },
+    "sap_ventilation": {
+      "type": "object",
+      "description": "Ventilation system details.",
+      "properties": {
+        "open_fireplaces_count": {
+          "type": "integer"
+        },
+        "open_chimneys_count": {
+          "type": "integer"
+        },
+        "blocked_chimneys_count": {
+          "type": "integer"
+        },
+        "closed_flues_count": {
+          "type": "integer"
+        },
+        "boilers_flues_count": {
+          "type": "integer"
+        },
+        "other_flues_count": {
+          "type": "integer"
+        },
+        "open_flues_count": {
+          "type": "integer"
+        },
+        "extract_fans_count": {
+          "type": "integer"
+        },
+        "psv_count": {
+          "type": "integer"
+        },
+        "flueless_gas_fires_count": {
+          "type": "integer"
+        },
+        "sheltered_sides_count": {
+          "type": "integer"
+        },
+        "pressure_test": {
+          "type": "integer"
+        },
+        "air_permeability": {
+          "type": "number"
+        },
+        "has_draught_lobby": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_mechanical_vent_approved_installer_scheme": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "ventilation_type": {
+          "type": "integer"
+        },
+        "mechanical_ventilation_data_source": {
+          "type": "integer"
+        },
+        "mechanical_vent_system_index_number": {
+          "type": "integer"
+        },
+        "mechanical_vent_duct_placement": {
+          "type": "integer"
+        },
+        "mechanical_vent_duct_insulation_level": {
+          "type": "integer"
+        },
+        "mechanical_vent_duct_type": {
+          "type": "integer"
+        },
+        "mechanical_vent_duct_insulation": {
+          "type": "integer"
+        },
+        "wet_rooms_count": {
+          "type": "integer"
+        },
+        "wall_type": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ventilation_type",
+        "sheltered_sides_count"
+      ]
+    },
+    "sap_opening_types": {
+      "type": "array",
+      "description": "Definitions of opening types (windows, doors) referenced by sap_openings.",
+      "items": {
+        "$ref": "#/$defs/sap_opening_type"
+      }
+    },
+    "sap_heating": {
+      "type": "object",
+      "description": "Heating system details.",
+      "properties": {
+        "main_heating_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/main_heating_item"
+          },
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "sap_community_heating_systems": {
+          "type": "array",
+          "description": "Community heating systems (SAP-Schema-19.x; may appear in earlier versions).",
+          "items": {
+            "$ref": "#/$defs/community_heating_system"
+          }
+        },
+        "secondary_heating_category": {
+          "type": "integer"
+        },
+        "secondary_heating_type": {
+          "type": "integer"
+        },
+        "secondary_fuel_type": {
+          "type": "integer"
+        },
+        "water_heating_code": {
+          "type": "integer"
+        },
+        "water_fuel_type": {
+          "type": "integer"
+        },
+        "water_heating_fuel": {
+          "type": "integer"
+        },
+        "thermal_store": {
+          "type": "integer"
+        },
+        "is_heat_pump_assisted_by_immersion": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_immersion_for_summer_use": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "hot_water_store_size": {
+          "type": "number"
+        },
+        "has_hot_water_cylinder": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "hot_water_store_heat_loss_source": {
+          "type": "integer"
+        },
+        "has_cylinder_thermostat": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_hot_water_separately_timed": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_cylinder_in_heated_space": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "is_primary_pipework_insulated": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "hot_water_store_heat_loss": {
+          "type": "number"
+        },
+        "immersion_heating_type": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "cylinder_size": {
+          "type": "integer"
+        },
+        "cylinder_insulation_type": {
+          "type": "integer"
+        },
+        "cylinder_insulation_thickness": {
+          "type": "integer"
+        },
+        "cylinder_heat_loss": {
+          "$ref": "#/$defs/measurement_value"
+        },
+        "has_fixed_air_conditioning": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "instantaneous_wwhrs": {
+          "type": "object",
+          "properties": {
+            "rooms_with_bath_and_or_shower": {
+              "type": "integer"
+            },
+            "rooms_with_mixer_shower_no_bath": {
+              "type": "integer"
+            },
+            "rooms_with_bath_and_mixer_shower": {
+              "type": "integer"
+            },
+            "wwhrs_index_number1": {
+              "type": "integer"
+            },
+            "wwhrs_index_number2": {
+              "type": "integer"
+            }
+          }
+        },
+        "storage_wwhrs": {
+          "type": "object",
+          "properties": {
+            "storage_wwhrs_energy_efficiency_class": {
+              "type": "integer"
+            },
+            "storage_wwhrs_volume": {
+              "type": "number"
+            }
+          }
+        },
+        "wwhrs": {
+          "type": "object",
+          "description": "WWHR system counts (used in older v16/15/17 schemas).",
+          "properties": {
+            "rooms_with_bath_and_or_shower": {
+              "type": "integer"
+            },
+            "rooms_with_bath_and_mixer_shower": {
+              "type": "integer"
+            },
+            "rooms_with_mixer_shower_no_bath": {
+              "type": "integer"
+            }
+          }
+        },
+        "has_solar_panel": {
+          "$ref": "#/$defs/boolean_string"
+        },
+        "community_dhw_network_index_number": {
+          "type": "integer"
+        },
+        "community_dhw_sub_network_name": {
+          "type": "string"
+        },
+        "community_dhw_distribution_type": {
+          "type": "integer"
+        },
+        "community_dhw_chp_electricity_generation": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "main_heating_details"
+      ]
+    },
+    "sap_energy_source": {
+      "type": "object",
+      "description": "Energy supply and generation details.",
+      "properties": {
+        "electricity_tariff": {
+          "type": "integer"
+        },
+        "wind_turbines_count": {
+          "type": "integer",
+          "description": "Number of wind turbines (SAP-Schema-16.x through 18.x). SAP-Schema-19.x uses wind_turbines array instead."
+        },
+        "wind_turbine_terrain_type": {
+          "type": "integer"
+        },
+        "wind_turbine_terrain_type_2": {
+          "type": "integer"
+        },
+        "pv_arrays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pv_array"
+          }
+        },
+        "fixed_lighting_outlets_count": {
+          "type": "integer",
+          "description": "Total fixed lighting outlets (used in v16–18 schemas; v19 uses sap_lighting instead)."
+        },
+        "low_energy_fixed_lighting_outlets_count": {
+          "type": "integer"
+        },
+        "low_energy_fixed_lighting_outlets_percentage": {
+          "type": "number"
+        },
+        "meter_type": {
+          "type": "integer"
+        },
+        "mains_gas": {
+          "$ref": "#/$defs/flag_value"
+        },
+        "main_gas": {
+          "type": "string",
+          "description": "Mains gas indicator as 'Y'/'N' (older schema versions)."
+        },
+        "hydro_electric_generation": {
+          "type": "number"
+        },
+        "is_hydro_output_connected_to_dwelling_meter": {
+          "$ref": "#/$defs/boolean_string"
+        }
+      },
+      "required": [
+        "electricity_tariff"
+      ]
+    },
+    "sap_windows": {
+      "type": "array",
+      "description": "Detailed SAP window data (SAP-Windows list node; present when individually measured).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "window_location": {
+            "type": "integer"
+          },
+          "window_height": {
+            "type": "number"
+          },
+          "window_width": {
+            "type": "number"
+          },
+          "glazing_type": {
+            "type": "integer"
+          },
+          "window_type": {
+            "type": "integer"
+          },
+          "orientation": {
+            "type": "integer"
+          },
+          "draught_proofed": {
+            "$ref": "#/$defs/boolean_string"
+          }
+        }
+      }
+    },
+    "sap_special_features": {
+      "type": "array",
+      "description": "Non-standard energy features.",
+      "items": {
+        "$ref": "#/$defs/sap_special_feature"
+      }
+    },
+    "sap_deselected_improvements": {
+      "type": "array",
+      "description": "Improvement measures deselected by the assessor.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "Assessor or document name field (present in some older schema versions)."
+    },
+    "bedf_revision_number": {
+      "type": "integer",
+      "description": "BEDF revision number (older schema versions)."
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version string from the XML (e.g. 'LIG-16.1') — present in some v16/15 schema outputs."
+    },
+    "restricted_access": {
+      "type": "integer",
+      "description": "Restricted access flag (older schema versions)."
+    },
+    "energy_consumption_current": {
+      "type": "integer",
+      "description": "Estimated annual energy consumption in kWh/m2. Always a plain integer in SAP-Schema-16.x/15.x and SAP-Schema-NI-17.x/16.x/15.x because the export configuration strips the XML quantity attribute via nodes_ignoring_attributes."
+    },
+    "energy_consumption_potential": {
+      "type": "integer",
+      "description": "Estimated potential annual energy consumption in kWh/m2. Always a plain integer in SAP-Schema-16.x/15.x and SAP-Schema-NI-17.x/16.x/15.x because the export configuration strips the XML quantity attribute via nodes_ignoring_attributes."
+    },
+    "windows": {
+      "description": "Window summary rating. In SAP-Schema-16.x/15.x (Sap163Base) this may be a single property_summary_item object (SAP XML) or an array (RdSAP XML with multiple Window elements).",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/property_summary_item"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/property_summary_item"
+          }
+        }
+      ]
+    },
+    "lighting_cost_current": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/money_value"
+        },
+        {
+          "type": "number",
+          "description": "Plain number when the XML lacked a currency attribute (common in SAP-Schema-16.x/15.x)."
+        }
+      ]
+    },
+    "lighting_cost_potential": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/money_value"
+        },
+        {
+          "type": "number",
+          "description": "Plain number when the XML lacked a currency attribute (common in SAP-Schema-16.x/15.x)."
+        }
+      ]
+    },
+    "heating_cost_current": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/money_value"
+        },
+        {
+          "type": "number",
+          "description": "Plain number when the XML lacked a currency attribute (common in SAP-Schema-16.x/15.x)."
+        }
+      ]
+    },
+    "heating_cost_potential": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/money_value"
+        },
+        {
+          "type": "number",
+          "description": "Plain number when the XML lacked a currency attribute (common in SAP-Schema-16.x/15.x)."
+        }
+      ]
+    },
+    "hot_water_cost_current": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/money_value"
+        },
+        {
+          "type": "number",
+          "description": "Plain number when the XML lacked a currency attribute (common in SAP-Schema-16.x/15.x)."
+        }
+      ]
+    },
+    "hot_water_cost_potential": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/money_value"
+        },
+        {
+          "type": "number",
+          "description": "Plain number when the XML lacked a currency attribute (common in SAP-Schema-16.x/15.x)."
+        }
+      ]
+    }
+  }
+}
+
