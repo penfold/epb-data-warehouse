@@ -614,8 +614,16 @@
       "items": { "$ref": "#/$defs/suggested_improvement" }
     },
     "alternative_improvements": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/suggested_improvement" }
+      "description": "anyOf: flat array (multiple items) or wrapper object with improvement key (single item).",
+      "anyOf": [
+        { "type": "array", "items": { "$ref": "#/$defs/suggested_improvement" } },
+        {
+          "type": "object",
+          "properties": {
+            "improvement": { "$ref": "#/$defs/suggested_improvement" }
+          }
+        }
+      ]
     },
     "lzc_energy_sources": {
       "type": "array",
