@@ -489,8 +489,8 @@
       "description": "Transaction type code describing why the EPC was produced."
     },
     "tenure": {
-      "type": "integer",
-      "description": "Tenure type code (1=owner-occupied, 2=rented-social, 3=rented-private, etc.)."
+      "oneOf": [{"type": "integer"}, {"type": "string", "enum": ["ND"]}],
+      "description": "Tenure type code (1=owner-occupied, 2=rented-social, 3=rented-private, ND=not defined)."
     },
     "uprn": {
       "anyOf": [
