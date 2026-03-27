@@ -656,7 +656,7 @@
         "narrow_cavities": { "$ref": "#/$defs/boolean_string" }
       }
     },
-    "built_form":       { "type": "integer", "description": "Built form code (1=detached, 2=semi-detached, 3=end-terrace, 4=mid-terrace, 5=enclosed end-terrace, 6=enclosed mid-terrace)." },
+    "built_form":       { "oneOf": [{"type": "integer"}, {"type": "string", "enum": ["NR"]}], "description": "Built form code (1=detached, 2=semi-detached, 3=end-terrace, 4=mid-terrace, 5=enclosed end-terrace, 6=enclosed mid-terrace, NR=not recorded)." },
     "extensions_count": { "type": "integer" },
     "multiple_glazing_type": { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
     "pvc_window_frames":     { "$ref": "#/$defs/boolean_string" },
