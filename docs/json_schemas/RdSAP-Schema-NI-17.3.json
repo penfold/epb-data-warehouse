@@ -327,10 +327,24 @@
           "type": "integer"
         },
         "roof_construction": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "roof_insulation_location": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "roof_u_value": {
           "type": "number"
@@ -541,7 +555,14 @@
                   "type": "number"
                 },
                 "pv_connection": {
-                  "type": "integer"
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
               },
               "required": [
@@ -565,7 +586,14 @@
                     "$ref": "#/$defs/measurement_value"
                   },
                   "orientation": {
-                    "type": "integer"
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
                   },
                   "pitch": {
                     "type": "integer"
@@ -615,7 +643,14 @@
           "$ref": "#/$defs/boolean_string"
         },
         "glazing_type": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "window_type": {
           "type": "integer"
@@ -1153,7 +1188,14 @@
       "type": "integer"
     },
     "multiple_glazing_type": {
-      "type": "integer"
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "pvc_window_frames": {
       "$ref": "#/$defs/boolean_string"
@@ -1170,7 +1212,14 @@
       "description": "Glazing gap code or value string."
     },
     "glazed_area": {
-      "type": "integer"
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "door_count": {
       "type": "integer"

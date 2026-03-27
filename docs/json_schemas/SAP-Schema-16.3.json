@@ -260,7 +260,14 @@
           "description": "Opening type code (1=door, 4=window, etc.)."
         },
         "glazing_type": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "u_value": {
           "type": "number"
@@ -475,10 +482,24 @@
           "type": "string"
         },
         "roof_construction": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "roof_insulation_location": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "roof_insulation_thickness": {
           "type": "string"
@@ -699,7 +720,14 @@
           "description": "Peak power in kWp."
         },
         "orientation": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "pitch": {
           "type": "integer"
@@ -1517,7 +1545,14 @@
             "type": "number"
           },
           "glazing_type": {
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
           },
           "window_type": {
             "type": "integer"

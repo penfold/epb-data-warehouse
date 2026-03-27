@@ -170,8 +170,8 @@
         "floor_u_value":           { "type": "number" },
         "floor_insulation_thickness": { "type": "string" },
         "floor_heat_loss":         { "type": "integer" },
-        "roof_construction":       { "type": "integer" },
-        "roof_insulation_location":{ "type": "integer" },
+        "roof_construction":       { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
+        "roof_insulation_location":{ "anyOf": [{ "type": "integer" }, { "type": "string" }] },
         "roof_u_value":            { "type": "number" },
         "roof_insulation_thickness":{ "type": "string" },
         "rafter_insulation_thickness": { "type": "string" },
@@ -248,7 +248,7 @@
               "type": "object",
               "properties": {
                 "percent_roof_area": { "type": "number" },
-                "pv_connection":     { "type": "integer" }
+                "pv_connection":     { "anyOf": [{ "type": "integer" }, { "type": "string" }] }
               },
               "required": ["percent_roof_area"]
             }
@@ -264,7 +264,7 @@
                 "type": "object",
                 "properties": {
                   "peak_power":  { "$ref": "#/$defs/measurement_value" },
-                  "orientation": { "type": "integer" },
+                  "orientation": { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
                   "pitch":       { "type": "integer" },
                   "overshading": { "type": "integer" }
                 },
@@ -291,7 +291,7 @@
         "window_height":      { "type": "number" },
         "window_width":       { "type": "number" },
         "draught_proofed":    { "$ref": "#/$defs/boolean_string" },
-        "glazing_type":       { "type": "integer" },
+        "glazing_type":       { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
         "window_type":        { "type": "integer" },
         "orientation":        { "type": "integer" },
         "window_transmission_details": {
@@ -658,13 +658,13 @@
     },
     "built_form":       { "type": "integer", "description": "Built form code (1=detached, 2=semi-detached, 3=end-terrace, 4=mid-terrace, 5=enclosed end-terrace, 6=enclosed mid-terrace)." },
     "extensions_count": { "type": "integer" },
-    "multiple_glazing_type": { "type": "integer" },
+    "multiple_glazing_type": { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
     "pvc_window_frames":     { "$ref": "#/$defs/boolean_string" },
     "glazing_gap": {
       "anyOf": [{ "type": "integer" }, { "type": "string" }],
       "description": "Glazing gap code or value string."
     },
-    "glazed_area": { "type": "integer" },
+    "glazed_area": { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
     "door_count":  { "type": "integer" },
     "insulated_door_count":     { "type": "integer" },
     "draughtproofed_door_count":{ "type": "integer" },
@@ -800,7 +800,7 @@
           }
         },
         "photovoltaic_supply": { "$ref": "#/$defs/photovoltaic_supply" },
-        "pv_connection": { "type": "integer", "description": "v21+ only." },
+        "pv_connection": { "anyOf": [{ "type": "integer" }, { "type": "string" }], "description": "v21+ only." },
         "pv_diverter":   { "$ref": "#/$defs/boolean_string", "description": "v21+ only." },
         "pv_battery_count": { "type": "integer", "description": "v21+ only." },
         "pv_batteries": {
