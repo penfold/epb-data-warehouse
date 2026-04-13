@@ -1,8 +1,8 @@
-{
+﻿{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "RdSAP-Schema-NI-17.4",
-  "title": "RdSAP-Schema-21.0.1 GET Certificate API Response",
-  "description": "JSON schema for the data returned by the GET /api/certificate endpoint for certificates lodged under RdSAP-Schema-21.0.1. Reflects the output of the export configuration (Rdsap21Base) and the fn_export_json_document PostgreSQL transform. Fields of type Measurement, Money or Sentence may appear as a scalar value or as an object with a qualifier key (quantity/currency/language) plus a value key, depending on whether the originating XML included the attribute.",
+  "title": "RdSAP-Schema-NI-17.4 GET Certificate API Response",
+  "description": "JSON schema for the data returned by the GET /api/certificate endpoint for certificates lodged under RdSAP-Schema-NI-17.4. Reflects the output of the export configuration (Rdsap21Base) and the fn_export_json_document PostgreSQL transform. Fields of type Measurement, Money or Sentence may appear as a scalar value or as an object with a qualifier key (quantity/currency/language) plus a value key, depending on whether the originating XML included the attribute.",
   "type": "object",
   "$defs": {
     "measurement_value": {

@@ -1,8 +1,8 @@
-{
+﻿{
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "SAP-Schema-19.2.0",
-  "title": "SAP-Schema-19.0.0 GET Certificate API Response",
-  "description": "JSON schema for the data returned by the GET /api/certificate endpoint for certificates lodged under SAP-Schema-19.0.0 (and 19.1.0, 19.2.0). Reflects the output of the Sap1900Base export configuration and the fn_export_json_document PostgreSQL transform. Fields of type Measurement or Money may appear as a scalar value or as an object with a qualifier key (quantity/currency) plus a value key, depending on whether the originating XML included the attribute. SAP-Schema-19.x adds SAP10 fields: sap_lighting, wind_turbines array, shower_outlets, smart meter flags, and terrain/export-capability fields compared to SAP-Schema-18.0.0.",
+  "title": "SAP-Schema-19.2.0 GET Certificate API Response",
+  "description": "JSON schema for the data returned by the GET /api/certificate endpoint for certificates lodged under SAP-Schema-19.2.0. Reflects the output of the Sap1900Base export configuration and the fn_export_json_document PostgreSQL transform. Fields of type Measurement or Money may appear as a scalar value or as an object with a qualifier key (quantity/currency) plus a value key, depending on whether the originating XML included the attribute. SAP-Schema-19.x adds SAP10 fields: sap_lighting, wind_turbines array, shower_outlets, smart meter flags, and terrain/export-capability fields compared to SAP-Schema-18.0.0.",
   "type": "object",
   "$defs": {
     "measurement_value": {
@@ -274,7 +274,7 @@
           "type": "integer"
         }
       },
-      "required": ["name", "data_source", "type", "glazing_type", "u_value"]
+      "required": ["name", "data_source", "type"]
     },
     "sap_roof_item": {
       "description": "A single roof element within a SAP building part.",
@@ -349,7 +349,7 @@
           "type": "integer"
         }
       },
-      "required": ["thermal_bridge_type", "length", "psi_value", "psi_value_source"]
+      "required": ["thermal_bridge_type"]
     },
     "sap_thermal_bridges_obj": {
       "description": "Thermal bridge data for a building part.",
@@ -499,7 +499,10 @@
           "type": "integer"
         },
         "boiler_index_number": {
-          "type": "integer"
+          "anyOf": [
+            { "type": "integer" },
+            { "type": "string", "description": "Alphanumeric SEDBUK product index; leading-zero values preserved as strings." }
+          ]
         },
         "main_heating_flue_type": {
           "type": "integer"
@@ -652,7 +655,7 @@
       "type": "object",
       "properties": {
         "peak_power": {
-          "type": "number",
+          "$ref": "#/$defs/measurement_value",
           "description": "Peak power in kWp."
         },
         "orientation": {
@@ -682,7 +685,7 @@
           ]
         }
       },
-      "required": ["peak_power", "orientation", "pitch", "overshading"]
+      "required": ["peak_power"]
     },
     "wind_turbine_item": {
       "description": "A wind turbine (SAP-Schema-19.x; earlier schemas use wind_turbines_count integer).",
