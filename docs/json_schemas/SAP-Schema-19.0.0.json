@@ -59,12 +59,34 @@
       "type": "string",
       "enum": ["Y", "N"]
     },
+    "sentence_value": {
+      "description": "A Sentence-typed XML node. Appears as a plain string when the XML language attribute is absent in the source XML, or as an object {language, value} when present.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "description": "The XML language attribute value, e.g. '1' for English."
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": ["value"],
+          "additionalProperties": false
+        }
+      ]
+    },
     "property_summary_item": {
       "description": "A single element of a property summary section (walls, roofs, windows, etc.).",
       "type": "object",
       "properties": {
         "description": {
-          "type": "string"
+          "$ref": "#/$defs/sentence_value"
         },
         "energy_efficiency_rating": {
           "type": "integer",
@@ -968,7 +990,7 @@
       "$ref": "#/$defs/boolean_string"
     },
     "dwelling_type": {
-      "type": "string",
+      "$ref": "#/$defs/sentence_value",
       "description": "Human-readable property type description, e.g. 'Mid-terrace house'."
     },
     "total_floor_area": {
