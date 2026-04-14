@@ -256,25 +256,25 @@
           "required": ["none_or_no_details"]
         },
         {
-          "type": "object",
-          "properties": {
-            "pv_arrays": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "peak_power":  { "$ref": "#/$defs/measurement_value" },
-                  "orientation": { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
-                  "pitch":       { "type": "integer" },
-                  "overshading": { "type": "integer" }
-                },
-                "required": ["peak_power", "orientation", "pitch", "overshading"]
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "peak_power":    { "$ref": "#/$defs/measurement_value" },
+                "orientation":   { "anyOf": [{ "type": "integer" }, { "type": "string" }] },
+                "pitch":         { "type": "integer" },
+                "overshading":   { "type": "integer" },
+                "pv_connection": { "anyOf": [{ "type": "integer" }, { "type": "string" }] }
               },
-              "minItems": 1,
-              "maxItems": 3
-            }
+              "required": ["peak_power", "orientation", "pitch", "overshading"]
+            },
+            "minItems": 1,
+            "maxItems": 1
           },
-          "required": ["pv_arrays"]
+          "minItems": 1,
+          "maxItems": 3
         }
       ]
     },
