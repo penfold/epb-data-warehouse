@@ -804,11 +804,10 @@
         "pv_diverter":   { "$ref": "#/$defs/boolean_string", "description": "v21+ only." },
         "pv_battery_count": { "type": "integer", "description": "v21+ only." },
         "pv_batteries": {
-          "type": "object",
+          "type": "array",
           "description": "v21+ only.",
-          "properties": {
-            "pv_battery": { "$ref": "#/$defs/pv_battery" }
-          }
+          "items": { "$ref": "#/$defs/pv_battery" },
+          "maxItems": 4
         },
         "hydro_electric_generation": { "type": "number" },
         "is_hydro_output_connected_to_dwelling_meter": { "$ref": "#/$defs/boolean_string" }
