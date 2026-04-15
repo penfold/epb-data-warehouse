@@ -525,7 +525,7 @@
           "type": "integer"
         },
         "main_heating_control": {
-          "type": "integer",
+          "type": "string",
           "description": "Heating control code."
         },
         "heat_emitter_type": {
@@ -611,7 +611,7 @@
           }
         },
         "sap_main_heating_code": {
-          "type": "integer"
+          "type": "string"
         }
       },
       "required": [
